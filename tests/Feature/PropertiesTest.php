@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\City;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,5 +26,18 @@ class PropertiesTest extends TestCase
         $response = $this->actingAs($user)->getJson('/api/owner/properties');
 
         $response->assertStatus(403);
+    }
+
+    public function test_owner_could_store_property()
+    {
+        $owner = User::factory()->create()->assignRole(Role::ROLE_OWNER);
+        $response = $this->actingAs($owner)->postJson('/api/owner/properties',[
+            'name' => 'My Property',
+            'city_id' => City::value('id'),
+            'address_street' => 'Street Address 1',
+            'address_postcode' => '12345'
+        ]);
+        $response->assertSuccessful();
+        $response->assertJsonFragment(['name' => 'My Property']);
     }
 }
