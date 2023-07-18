@@ -47,11 +47,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function role(): BelongsTo
-    {
-        return $this->belongsTo(Role::class);
-    }
-
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
