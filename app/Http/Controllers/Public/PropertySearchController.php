@@ -14,6 +14,9 @@ class PropertySearchController extends Controller
             ->when($request->city, function($query) use ($request){
                 $query->where('city_id',$request->city);
             })
+            ->when($request->country, function($query) use ($request){
+                $query->whereHas('city', fn ($query) => $query->where('country_id', $request->country));
+            })
             ->get();
     }
 }
