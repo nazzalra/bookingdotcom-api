@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Facility extends Model
 {
@@ -15,5 +16,10 @@ class Facility extends Model
     public function category():BelongsTo
     {
         return $this->belongsTo(FacilityCategory::class, 'category_id');
+    }
+
+    public function apartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Apartment::class);
     }
 }
