@@ -22,4 +22,9 @@ class Facility extends Model
     {
         return $this->belongsToMany(Apartment::class);
     }
+
+    public function properties():BelongsToMany
+    {
+        return $this->belongsToMany(Property::class);
+    }
 }
