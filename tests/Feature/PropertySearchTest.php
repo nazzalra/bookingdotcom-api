@@ -29,9 +29,8 @@ class PropertySearchTest extends TestCase
         $propertyInAnotherCity = Property::factory()->create(['owner_id' => $owner->id,'city_id' => $cities[1]]);
 
         $response = $this->getJson('/api/search?city=' . $cities[0]);
-
         $response->assertStatus(200);
-        $response->assertJsonCount(1);
+        $response->assertJsonCount(1, 'properties');
         $response->assertJsonFragment(['id' => $propertyInCity->id]);
     }
 
@@ -50,7 +49,7 @@ class PropertySearchTest extends TestCase
         
         $response = $this->getJson('/api/search?country=' . $countries[0]->id);
         $response->assertStatus(200);
-        $response->assertJsonCount(1);
+        $response->assertJsonCount(1, 'properties');
         $response->assertJsonFragment(['id' => $propertyInCountry->id]);
     }
 
@@ -72,7 +71,7 @@ class PropertySearchTest extends TestCase
         ]);
         $response = $this->getJson('/api/search?geoobject=' . $geoobject->id);
         $response->assertStatus(200);
-        $response->assertJsonCount(1);
+        $response->assertJsonCount(1, 'properties');
         $response->assertJsonFragment(['id' => $propertyNear->id]);
     }
 
@@ -102,7 +101,7 @@ class PropertySearchTest extends TestCase
 
         $response = $this->getJson('/api/search?city=' . $city . '&capacity_adults=2&capacity_children=1');
         $response->assertStatus(200);
-        $response->assertJsonCount(1);
+        $response->assertJsonCount(1, 'properties');
         $response->assertJsonFragment(['id' => $propertyWithLargeApartment->id]);
     }
 
@@ -129,9 +128,9 @@ class PropertySearchTest extends TestCase
 
         $response = $this->getJson('/api/search?city=' . $cityId . '&capacity_adults=2&capacity_children=1');
         $response->assertStatus(200);
-        $response->assertJsonCount(1);
-        $response->assertJsonCount(1, '0.apartments');
-        $response->assertJsonPath('0.apartments.0.name', $largeApartment->name);
+        $response->assertJsonCount(1, 'properties');
+        $response->assertJsonCount(1, 'properties.0.apartments');
+        $response->assertJsonPath('properties.0.apartments.0.name', $largeApartment->name);
     }
 
     public function test_property_search_beds_list_all_cases()
@@ -155,9 +154,9 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 0 beds on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonCount(1);
-        $response->assertJsonCount(1, '0.apartments');
-        $response->assertJsonPath('0.apartments.0.beds_list','');
+        $response->assertJsonCount(1, 'properties');
+        $response->assertJsonCount(1, 'properties.0.apartments');
+        $response->assertJsonPath('properties.0.apartments.0.beds_list','');
 
         // create 1 room with 1 bed on that apartment
         $room = Room::create([
@@ -174,7 +173,7 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 1 bed on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonPath('0.apartments.0.beds_list', '1 '. $bedTypes[0]->name);
+        $response->assertJsonPath('properties.0.apartments.0.beds_list', '1 '. $bedTypes[0]->name);
 
         // add another bed with the same type to the same room
         Bed::create([
@@ -185,7 +184,7 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 2 bed on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonPath('0.apartments.0.beds_list', '2 '. str($bedTypes[0]->name)->plural());
+        $response->assertJsonPath('properties.0.apartments.0.beds_list', '2 '. str($bedTypes[0]->name)->plural());
 
         // add the second room with no beds
         $room2 = Room::create([
@@ -197,7 +196,7 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 2 bed on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonPath('0.apartments.0.beds_list', '2 '. str($bedTypes[0]->name)->plural());
+        $response->assertJsonPath('properties.0.apartments.0.beds_list', '2 '. str($bedTypes[0]->name)->plural());
 
         // add 1 bed with the same type as previous to the second room
         Bed::create([
@@ -208,7 +207,7 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 2 bed on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonPath('0.apartments.0.beds_list', '3 '. str($bedTypes[0]->name)->plural());
+        $response->assertJsonPath('properties.0.apartments.0.beds_list', '3 '. str($bedTypes[0]->name)->plural());
 
         // add 1 bed with different type to the second room
         Bed::create([
@@ -219,7 +218,7 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 2 bed on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonPath('0.apartments.0.beds_list', '4 beds (3 '. str($bedTypes[0]->name)->plural() . ', 1 ' . $bedTypes[1]->name . ')');
+        $response->assertJsonPath('properties.0.apartments.0.beds_list', '4 beds (3 '. str($bedTypes[0]->name)->plural() . ', 1 ' . $bedTypes[1]->name . ')');
 
         // add 1 bed with the same type as previous to the second room
         Bed::create([
@@ -230,7 +229,7 @@ class PropertySearchTest extends TestCase
         // expect 1 property, 1 apartment on that property, 2 bed on that apartment
         $response = $this->getJson('/api/search?city=' . $cityId);
         $response->assertStatus(200);
-        $response->assertJsonPath('0.apartments.0.beds_list', '5 beds (3 '. str($bedTypes[0]->name)->plural() . ', 2 ' . str($bedTypes[1]->name)->plural() . ')');
+        $response->assertJsonPath('properties.0.apartments.0.beds_list', '5 beds (3 '. str($bedTypes[0]->name)->plural() . ', 2 ' . str($bedTypes[1]->name)->plural() . ')');
     }
 
     public function test_property_search_returns_one_best_apartment_per_property()
@@ -262,8 +261,8 @@ class PropertySearchTest extends TestCase
 
         $response = $this->getJson('/api/search?city=' . $cityId . '&capacity_adults=2&capacity_children=1');
         $response->assertStatus(200);
-        $response->assertJsonCount(1, '0.apartments');
-        $response->assertJsonPath('0.apartments.0.name', $mediumApartment->name);
+        $response->assertJsonCount(1, 'properties.0.apartments');
+        $response->assertJsonPath('properties.0.apartments.0.name', $mediumApartment->name);
 
     }
 }
