@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
 class Apartment extends Model
 {
-    use HasFactory;
+    use HasFactory, HasEagerLimit;
 
     protected $fillable = [
         'apartment_type_id',
