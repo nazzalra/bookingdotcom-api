@@ -16,6 +16,7 @@ use App\Models\RoomType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class PropertySearchTest extends TestCase
@@ -347,5 +348,29 @@ class PropertySearchTest extends TestCase
         $this->getJson('/api/search?city=' . $cityId . '&capacity_adults=2&capacity_children=1' . '&facilities[]=' . $facility->id)
             ->assertStatus(200)
             ->assertJsonCount(2, 'properties');
+    }
+
+    public function test_property_search_include_photos_thumbnail_per_property()
+    {
+        $owner = User::factory()->create()->assignRole(Role::ROLE_OWNER);
+        $cityId = City::value('id');
+        
+        $property = Property::factory()->create([
+            'owner_id' => $owner->id,
+            'city_id' => $cityId
+        ]);
+
+        $photo1 = $this->actingAs($owner)->postJson('/api/owner/properties/' . $property->id . '/photos', [
+            'photo' => UploadedFile::fake()->image('photo1.png')
+        ]);
+        $photo2 = $this->actingAs($owner)->postJson('/api/owner/properties/' . $property->id . '/photos', [
+            'photo' => UploadedFile::fake()->image('photo2.png')
+        ]);
+
+        $response = $this->getJson('/api/search?city='. $cityId);
+        $response->assertStatus(200);
+        $response->assertJsonCount(2, 'properties.0.photos');
+        $response->assertJsonFragment(['photos'=>[$photo1['thumbnail'], $photo2['thumbnail']]]);
+        
     }
 }
