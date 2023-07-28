@@ -16,6 +16,8 @@ class Booking extends Model
         'user_id',
         'start_date',
         'end_date',
+        'guests_adults',
+        'guests_children',
         'total_price'
     ];
 
