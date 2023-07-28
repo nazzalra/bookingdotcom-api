@@ -100,4 +100,9 @@ class Apartment extends Model
         return $cost;
     }
 
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
 }
