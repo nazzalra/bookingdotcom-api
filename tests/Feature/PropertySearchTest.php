@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Apartment;
+use App\Models\ApartmentPrice;
 use App\Models\Bed;
 use App\Models\BedType;
 use App\Models\City;
@@ -372,5 +373,93 @@ class PropertySearchTest extends TestCase
         $response->assertJsonCount(2, 'properties.0.photos');
         $response->assertJsonFragment(['photos'=>[$photo1['thumbnail'], $photo2['thumbnail']]]);
         
+    }
+
+    public function test_search_property_filters_by_price()
+    {
+        $owner = User::factory()->create()->assignRole(Role::ROLE_OWNER);
+        $cityId = City::value('id');
+        
+        $property = Property::factory()->create([
+            'owner_id' => $owner->id,
+            'city_id' => $cityId
+        ]);
+
+        $cheapApartment = Apartment::factory()->create([
+            'name' => 'Small Apartment',
+            'property_id' => $property->id,
+            'capacity_adults' => 2,
+            'capacity_children' => 1
+        ]);
+
+        $cheapApartment->prices()->create([
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addMonth(),
+            'price' => 30
+        ]);
+
+        $property2 = Property::factory()->create([
+            'owner_id' => $owner->id,
+            'city_id' => $cityId
+        ]);
+
+        $expensiveApartment = Apartment::factory()->create([
+            'name' => 'Big Apartment',
+            'property_id' => $property2->id,
+            'capacity_adults' => 5,
+            'capacity_children' => 3
+        ]);
+
+        $expensiveApartment->prices()->create([
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addMonth(),
+            'price' => 200
+        ]);
+
+        $this->getJson('/api/search?city=' . $cityId)
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'properties');
+
+        // price from
+        $this->getJson('/api/search?city=' . $cityId . '&price_from=10')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'properties');
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_from=40')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'properties');
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_from=240')
+            ->assertStatus(200)
+            ->assertJsonCount(0, 'properties');
+
+        // price to
+        $this->getJson('/api/search?city=' . $cityId . '&price_to=10')
+            ->assertStatus(200)
+            ->assertJsonCount(0, 'properties');
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_to=40')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'properties');
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_to=240')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'properties');
+
+            
+        // price both price_from and price_to
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_from=10&price_to=40')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'properties');
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_from=10&price_to=350')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'properties');
+
+        $this->getJson('/api/search?city=' . $cityId . '&price_from=200&price_to=350')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'properties');
+
     }
 }
