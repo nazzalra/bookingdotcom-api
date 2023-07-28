@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Carbon;
 use Staudenmeir\EloquentEagerLimit\HasEagerLimit;
 
 class Apartment extends Model
@@ -74,6 +75,29 @@ class Apartment extends Model
     public function facilities(): BelongsToMany
     {
         return $this->belongsToMany(Facility::class);
+    }
+
+    public function calculatePriceForDates($startDate, $endDate)
+    {
+        // Convert both params to Carbon if are not already
+        if(!$startDate instanceof Carbon){
+            $startDate = Carbon::parse($startDate)->startOfDay();
+        }
+
+        if(!$endDate instanceof Carbon){
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        }
+
+        $cost = 0;
+
+        while($startDate->lte($endDate)){
+            $cost += $this->prices->where(function(ApartmentPrice $price) use ($startDate){
+                return $price->start_date->lte($startDate) && $price->end_date->gte($startDate);
+            })->value('price');
+            $startDate->addDay();
+        }
+
+        return $cost;
     }
 
 }
