@@ -31,7 +31,7 @@ class ApartmentAvailableRule implements ValidationRule, DataAwareRule
         }
 
         if(Booking::where('apartment_id', $value)
-            ->validForRange([$this->data['guests_adults'], $this->data['guests_children']])
+            ->validForRange([$this->data['start_date'], $this->data['end_date']])
             ->exists()
         ){
             $fail('Sorry, this apartment is not available for those dates');
