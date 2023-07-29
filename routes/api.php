@@ -23,7 +23,7 @@ Route::post('auth/register', App\Http\Controllers\Auth\RegisterController::class
 
 Route::middleware('auth:sanctum')->group(function(){
     Route::prefix('user')->group(function(){
-        Route::resource('bookings', \App\Http\Controllers\User\BookingController::class);
+        Route::resource('bookings', \App\Http\Controllers\User\BookingController::class)->withTrashed();
     });
     
     Route::prefix('owner')->group(function(){
