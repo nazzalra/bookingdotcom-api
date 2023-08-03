@@ -144,4 +144,45 @@ class BookingsTest extends TestCase
                     ->assertJsonFragment(['cancelled_at'=> now()->toDateString()]);
     }
 
+    public function test_user_can_post_rating_to_their_booking()
+    {
+        $user1 = User::factory()->create()->assignRole(Role::ROLE_USER);
+        $user2 = User::factory()->create()->assignRole(Role::ROLE_USER);
+
+        $apartment = $this->create_apartment();
+        $booking = Booking::create([
+            'apartment_id' => $apartment->id,
+            'user_id' => $user1->id,
+            'start_date' => now()->addDay(),
+            'end_date' => now()->addDays(2),
+            'guests_adults' => 2,
+            'guests_children' => 1
+        ]);
+
+        // skenario 1 : user2 unauthorized to update the booking
+        $response = $this->actingAs($user2)->putJson('/api/user/bookings/' . $booking->id);
+        $response->assertStatus(403);
+
+        // skenario 2 : rating validation error
+        $response = $this->actingAs($user1)->putJson('/api/user/bookings/' . $booking->id, [
+            'rating' => 11
+        ]);
+        $response->assertStatus(422);
+
+        // skenario 3 : review_comment validation error
+        $response = $this->actingAs($user1)->putJson('/api/user/bookings/' . $booking->id, [
+            'review_comment' => 'comment'
+        ]);
+        $response->assertStatus(422);
+
+        $successPayload =  [
+            'rating' => 10,
+            'review_comment' => "this is the best apartment i've ever rent"
+        ];
+        // skenario 4 : update booking successfully
+        $response = $this->actingAs($user1)->putJson('/api/user/bookings/' . $booking->id,$successPayload);
+        $response->assertStatus(200);
+        $response->assertJsonFragment($successPayload);
+    }
+
 }
