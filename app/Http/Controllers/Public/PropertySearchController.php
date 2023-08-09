@@ -85,7 +85,7 @@ class PropertySearchController extends Controller
 
             $properties = $propertiesQuery->paginate(10)->withQueryString();
             return [
-                'properties' => PropertySearchResource::collection($properties),
+                'properties' => PropertySearchResource::collection($properties)->response()->getData(true),
                 'facilities' => $facilities
             ];
     }
